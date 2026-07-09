@@ -278,7 +278,5 @@ This is the host-side interface connected to the Pod namespace.
 | Interface inside Pod | eth0@if5 |
 | Interface on Host | veth5b461568@if2 |
 
-<a href="https://github.com/rdssoares-glitch/k8s_lab/blob/master/diagrams/pod-diag.drawio.svg" target="_blank">
-  <img src="../diagrams/pod-diag.drawio.svg" alt="Diagrama do Pod" width="100%" />
-</a>
+
 
