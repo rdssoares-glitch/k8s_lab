@@ -90,3 +90,131 @@ docker network inspect minikube
 | minikube | 192.168.49.2 |
 | minikube-m02 | 192.168.49.3 |
 | minikube-m03 | 192.168.49.4 |
+
+# Network Investigation
+
+This section demonstrates how to identify the network namespace and the IP address of a Pod by starting from the Kubernetes API and progressively inspecting the container runtime.
+
+## Step 1 - Locate the Pod
+
+```bash
+kubectl get pods -o wide
+```
+
+Output:
+
+```text
+NAME                        IP           NODE
+nginx-57457b7d55-qbxtt      10.244.2.3   minikube-m03
+```
+
+The Pod is running on **minikube-m03**.
+
+---
+
+## Step 2 - List the containers on the node
+
+Connect to the node:
+
+```bash
+minikube ssh -n minikube-m03
+```
+
+List the containers:
+
+```bash
+crictl ps
+```
+
+Output:
+
+```text
+CONTAINER ID      NAME
+6568fec4d101b     nginx
+```
+
+---
+
+## Step 3 - Identify the container PID
+
+Inspect the container:
+
+```bash
+crictl inspect 6568fec4d101b | grep pid
+```
+
+Output:
+
+```text
+"pid": 1827
+```
+
+The nginx container is running as process **1827**.
+
+---
+
+## Step 4 - Enter the Pod network namespace
+
+Use the process PID to enter the network namespace:
+
+```bash
+sudo nsenter -t 1827 -n ip a
+```
+
+Output:
+
+```text
+1: lo
+
+2: eth0@if5
+
+inet 10.244.2.3/24
+```
+
+The Pod network namespace contains:
+
+- loopback interface (`lo`)
+- one Ethernet interface (`eth0`)
+- Pod IP: **10.244.2.3**
+
+---
+
+## Step 5 - Host-side veth
+
+Back on the node:
+
+```bash
+ip -br link
+```
+
+Output:
+
+```text
+docker@minikube-m03:~$ ip -br link
+lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+eth0@if8         UP             06:a5:ea:98:5d:44 <BROADCAST,MULTICAST,UP,LOWER_UP>
+docker0          DOWN           42:c3:51:07:a7:09 <NO-CARRIER,BROADCAST,MULTICAST,UP>
+veth8c6c99e4@if2 UP             de:51:cd:2e:bb:19 <BROADCAST,MULTICAST,UP,LOWER_UP>
+**veth5b461568@if2** UP             d2:6e:da:c8:a9:4b <BROADCAST,MULTICAST,UP,LOWER_UP>
+docker@minikube-m03:~$
+```
+
+Inspect the interface:
+
+```bash
+ip -d link show veth5b461568
+```
+
+Output:
+
+```text
+docker@minikube-m03:~$ ip -d link show veth5b461568
+5: veth5b461568@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default
+    link/ether d2:6e:da:c8:a9:4b brd ff:ff:ff:ff:ff:ff **link-netnsid 2** promiscuity 0 minmtu 68 maxmtu 65535
+    veth addrgenmode eui64 numtxqueues 12 numrxqueues 12 gso_max_size 65536 gso_max_segs 65535
+docker@minikube-m03:~$
+```
+
+This is the host-side interface connected to the Pod namespace.
+
+---
