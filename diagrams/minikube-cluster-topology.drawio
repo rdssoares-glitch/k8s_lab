@@ -1,0 +1,55 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="D314yzAzQux_h0hNRXDS">
+    <mxGraphModel dx="1414" dy="751" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1169" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="service_cidr_box" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;startSize=30;fontSize=14;" value="&lt;b&gt;Service CIDR: 10.96.0.0/12&lt;/b&gt;" vertex="1">
+          <mxGeometry height="150" width="888" x="140" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_k8s" parent="service_cidr_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;Kubernetes API&lt;/b&gt;&lt;hr&gt;10.96.0.1" vertex="1">
+          <mxGeometry height="70" width="220" x="40" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_nodeport" parent="service_cidr_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;align=center;" value="&lt;b&gt;NodePort Services&lt;/b&gt;&lt;hr&gt;&lt;div align=&#39;left&#39;&gt;• Grafana: 10.96.131.255&lt;br&gt;• Prometheus: 10.106.118.99&lt;br&gt;• nginx-service: 10.98.248.168&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="528" x="320" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="node_net_box" parent="1" style="swimlane;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;startSize=30;fontSize=14;" value="&lt;b&gt;Docker Network (Node Network): 192.168.49.0/24&lt;/b&gt;" vertex="1">
+          <mxGeometry height="360" width="888" x="140" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="node1" parent="node_net_box" style="swimlane;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;startSize=75;fontSize=12;" value="&lt;b&gt;minikube&lt;/b&gt;&lt;br&gt;Control Plane&lt;br&gt;&lt;b&gt;IP:&lt;/b&gt; 192.168.49.2&lt;br&gt;&lt;b&gt;Pod CIDR:&lt;/b&gt; 10.244.0.0/24" vertex="1">
+          <mxGeometry height="280" width="250" x="30" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n1_pod1" parent="node1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;b&gt;nginx&lt;/b&gt;&lt;br&gt;10.244.0.3" vertex="1">
+          <mxGeometry height="45" width="200" x="25" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="node2" parent="node_net_box" style="swimlane;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;startSize=75;fontSize=12;" value="&lt;b&gt;minikube-m02&lt;/b&gt;&lt;br&gt;Worker&lt;br&gt;&lt;b&gt;IP:&lt;/b&gt; 192.168.49.3&lt;br&gt;&lt;b&gt;Pod CIDR:&lt;/b&gt; 10.244.1.0/24" vertex="1">
+          <mxGeometry height="280" width="250" x="319" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_pod1" parent="node2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;b&gt;grafana&lt;/b&gt;&lt;br&gt;10.244.1.5" vertex="1">
+          <mxGeometry height="45" width="200" x="25" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_pod2" parent="node2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;b&gt;nginx&lt;/b&gt;&lt;br&gt;10.244.1.4" vertex="1">
+          <mxGeometry height="45" width="200" x="25" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_pod3" parent="node2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;b&gt;static-pod&lt;/b&gt;&lt;br&gt;10.244.1.3" vertex="1">
+          <mxGeometry height="45" width="200" x="25" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="node3" parent="node_net_box" style="swimlane;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;startSize=75;fontSize=12;" value="&lt;b&gt;minikube-m03&lt;/b&gt;&lt;br&gt;Worker&lt;br&gt;&lt;b&gt;IP:&lt;/b&gt; 192.168.49.4&lt;br&gt;&lt;b&gt;Pod CIDR:&lt;/b&gt; 10.244.2.0/24" vertex="1">
+          <mxGeometry height="280" width="250" x="608" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n3_pod1" parent="node3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;b&gt;prometheus&lt;/b&gt;&lt;br&gt;10.244.2.2" vertex="1">
+          <mxGeometry height="45" width="200" x="25" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n3_pod2" parent="node3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;b&gt;nginx&lt;/b&gt;&lt;br&gt;10.244.2.3" vertex="1">
+          <mxGeometry height="45" width="200" x="25" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_svc_node" edge="1" parent="1" source="service_cidr_box" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;dashed=1;" target="node_net_box">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_box" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" value="&lt;b&gt;Resumo de Redes do Cluster&lt;/b&gt;&lt;hr&gt;&lt;div align=&#39;left&#39;&gt;• &lt;b&gt;Pod Network (Cluster CIDR):&lt;/b&gt; 10.244.0.0/16&lt;br&gt;• &lt;b&gt;Service Network (Service CIDR):&lt;/b&gt; 10.96.0.0/12&lt;br&gt;• &lt;b&gt;Node Network:&lt;/b&gt; 192.168.49.0/24&lt;/div&gt;" vertex="1">
+          <mxGeometry height="90" width="888" x="140" y="630" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
