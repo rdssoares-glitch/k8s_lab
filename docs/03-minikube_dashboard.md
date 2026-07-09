@@ -113,3 +113,15 @@ The Dashboard is ready to use when:
 - Both Dashboard Pods are in the **Running** state.
 - The Dashboard URL is accessible from your web browser.
 - You can browse Kubernetes resources such as Nodes, Pods, Deployments, Services, ConfigMaps, and Namespaces.
+
+# 6. Check addons enable in the cluster
+
+```bash
+minikube addons list
+```
+
+# 7. To enable addons in the cluster
+
+```bash
+minikube addons enable ingress
+```
