@@ -1,30 +1,30 @@
-# 🚀 Setup do Ambiente Kubernetes com Minikube
+# 🚀 Kubernetes Environment Setup with Minikube
 
-Este documento descreve o processo de instalação do **Docker Engine**, **kubectl** e **Minikube** para criação de um cluster Kubernetes local com **3 nós**, utilizando **WSL2 (Ubuntu 24.04)** sobre **Windows 11**.
+This document describes the installation process for **Docker Engine**, **kubectl**, and **Minikube** to create a local **3-node Kubernetes cluster** running on **WSL2 (Ubuntu 24.04)** on **Windows 11**.
 
 ---
 
-# 📋 Pré-requisitos
+# 📋 Prerequisites
 
 - Windows 11
-- WSL2 habilitado
+- WSL2 enabled
 - Ubuntu 24.04 LTS
-- Mínimo de 2 vCPUs
-- Mínimo de 4 GB de memória livre
-- Aproximadamente 20 GB de espaço em disco
+- Minimum 2 vCPUs
+- Minimum 4 GB of available RAM
+- Approximately 20 GB of available disk space
 
 ---
 
-# 1. Instalação do Docker Engine
+# 1. Install Docker Engine
 
-Atualize os pacotes do sistema.
+Update the system packages.
 
 ```bash
 sudo apt update
 sudo apt install -y ca-certificates curl gnupg
 ```
 
-## Adicionar a chave GPG do Docker
+## Add the Docker GPG key
 
 ```bash
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -36,7 +36,7 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
 ```
 
-## Adicionar o repositório oficial
+## Add the official Docker repository
 
 ```bash
 echo \
@@ -46,7 +46,7 @@ $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
 | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 ```
 
-## Instalar o Docker
+## Install Docker
 
 ```bash
 sudo apt update
@@ -59,7 +59,7 @@ docker-buildx-plugin \
 docker-compose-plugin
 ```
 
-## Permitir executar Docker sem sudo
+## Allow Docker to run without sudo
 
 ```bash
 sudo usermod -aG docker $USER
@@ -67,7 +67,7 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
-## Validar instalação
+## Verify the installation
 
 ```bash
 docker version
@@ -75,7 +75,7 @@ docker version
 
 ---
 
-# 2. Instalação do kubectl
+# 2. Install kubectl
 
 ```bash
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -87,7 +87,7 @@ kubectl version --client
 
 ---
 
-# 3. Instalação do Minikube
+# 3. Install Minikube
 
 ```bash
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
@@ -99,7 +99,7 @@ minikube version
 
 ---
 
-# 4. Criando um cluster Kubernetes com 3 nós
+# 4. Create a 3-node Kubernetes cluster
 
 ```bash
 minikube start --driver=docker --nodes=3
@@ -107,21 +107,21 @@ minikube start --driver=docker --nodes=3
 
 ---
 
-# 5. Validando a instalação
+# 5. Verify the installation
 
-## Status do Minikube
+## Check the Minikube status
 
 ```bash
 minikube status
 ```
 
-## Listar os nós do cluster
+## List the cluster nodes
 
 ```bash
 kubectl get nodes -o wide
 ```
 
-## Listar todos os Pods
+## List all running Pods
 
 ```bash
 kubectl get pods -A
@@ -129,80 +129,90 @@ kubectl get pods -A
 
 ---
 
-# 6. Comandos úteis
+# 6. Useful commands
 
-## Parar o cluster
+## Stop the cluster
 
 ```bash
 minikube stop
 ```
 
-## Iniciar o cluster
+## Start the cluster
 
 ```bash
 minikube start
 ```
 
-## Excluir o cluster
+## Delete the cluster
 
 ```bash
 minikube delete
 ```
 
-## Abrir o Dashboard
+## Open the Kubernetes Dashboard
 
 ```bash
 minikube dashboard
 ```
 
-## Obter o IP do cluster
+## Get the cluster IP address
 
 ```bash
 minikube ip
 ```
 
-## Obter o Status do cluster
+## Check the cluster status
 
 ```bash
 minikube status
 ```
 
-## Obter as imagens do cluster
+## List container images available in the cluster
 
 ```bash
 minikube image ls
 ```
- 
+
+## List images using CRI
+
 ```bash
 minikube ssh
 crictl images
 ```
 
-## Acessar um nó via SSH
+## Access a node via SSH
 
-Nó principal:
+### Control plane node
 
 ```bash
 minikube ssh
 ```
 
-Segundo nó:
+### Worker node 1
 
 ```bash
 minikube ssh -n minikube-m02
 ```
 
-Terceiro nó:
+### Worker node 2
 
 ```bash
 minikube ssh -n minikube-m03
 ```
 
+## Add worker nodes to an existing cluster
+
+If Minikube is already running, additional worker nodes can be added using:
+
+```bash
+minikube node add
+```
+
 ---
 
-# 7. Exemplo de ambiente criado
+# 7. Example environment
 
-## Perfis do Minikube
+## Minikube profiles
 
 ```bash
 $ minikube profile list
@@ -214,7 +224,7 @@ $ minikube profile list
 └──────────┴────────┴─────────┴──────────────┴─────────┴────────┴───────┴────────────────┴────────────────────┘
 ```
 
-## Nós do cluster
+## Cluster nodes
 
 ```bash
 $ kubectl get nodes
@@ -227,13 +237,13 @@ minikube-m03   Ready    <none>          43s   v1.34.0
 
 ---
 
-# ✅ Resultado
+# ✅ Result
 
-Ao final deste procedimento será criado um ambiente Kubernetes local contendo:
+At the end of this procedure, the local Kubernetes environment will include:
 
 - Docker Engine
 - kubectl
 - Minikube
-- Cluster Kubernetes com 3 nós
-- Runtime Docker
-- Ambiente pronto para execução de Pods, Deployments, Services e demais recursos Kubernetes.
+- A 3-node Kubernetes cluster
+- Docker container runtime
+- A fully functional environment ready to run Pods, Deployments, Services, and other Kubernetes resources.
