@@ -164,11 +164,21 @@ sudo nsenter -t 1827 -n ip a
 Output:
 
 ```text
-1: lo
+docker@minikube-m03:~$ sudo nsenter -t 1827 -n ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: eth0@if5: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 4e:b4:ae:08:f5:30 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.244.2.3/24 brd 10.244.2.255 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::4cb4:aeff:fe08:f530/64 scope link
+       valid_lft forever preferred_lft forever
+docker@minikube-m03:~$
 
-2: eth0@if5
-
-inet 10.244.2.3/24
 ```
 
 The Pod network namespace contains:
@@ -195,26 +205,77 @@ lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
 eth0@if8         UP             06:a5:ea:98:5d:44 <BROADCAST,MULTICAST,UP,LOWER_UP>
 docker0          DOWN           42:c3:51:07:a7:09 <NO-CARRIER,BROADCAST,MULTICAST,UP>
 veth8c6c99e4@if2 UP             de:51:cd:2e:bb:19 <BROADCAST,MULTICAST,UP,LOWER_UP>
-**veth5b461568@if2** UP             d2:6e:da:c8:a9:4b <BROADCAST,MULTICAST,UP,LOWER_UP>
+veth5b461568@if2 UP             d2:6e:da:c8:a9:4b <BROADCAST,MULTICAST,UP,LOWER_UP>
 docker@minikube-m03:~$
 ```
 
 Inspect the interface:
 
 ```bash
-ip -d link show veth5b461568
+ip link
 ```
 
+Output:
+
+
+```text
+docker@minikube-m03:~$ ip link
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: eth0@if8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default
+    link/ether 06:a5:ea:98:5d:44 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+3: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN mode DEFAULT group default
+    link/ether 42:c3:51:07:a7:09 brd ff:ff:ff:ff:ff:ff
+4: veth8c6c99e4@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default
+    link/ether de:51:cd:2e:bb:19 brd ff:ff:ff:ff:ff:ff link-netnsid 1
+5: veth5b461568@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default
+    link/ether d2:6e:da:c8:a9:4b brd ff:ff:ff:ff:ff:ff link-netnsid 2
+
+```
+``` bash
+ip -d link show veth5b461568
+```
 Output:
 
 ```text
 docker@minikube-m03:~$ ip -d link show veth5b461568
 5: veth5b461568@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default
-    link/ether d2:6e:da:c8:a9:4b brd ff:ff:ff:ff:ff:ff **link-netnsid 2** promiscuity 0 minmtu 68 maxmtu 65535
+    link/ether d2:6e:da:c8:a9:4b brd ff:ff:ff:ff:ff:ff link-netnsid 2 promiscuity 0 minmtu 68 maxmtu 65535
     veth addrgenmode eui64 numtxqueues 12 numrxqueues 12 gso_max_size 65536 gso_max_segs 65535
 docker@minikube-m03:~$
+
+````
+Observe the interface index (**ifindex**) on the host:
+
+```text
+5: veth5b461568@if2
+^
+|
+ifindex 5
+```
+
+The interface index is used to map the Pod network interface to the host-side `veth` interface.
+
+Pod network namespace:
+
+```text
+eth0@if5
+IP: 10.244.2.3
+```
+O campo **`link-netnsid 2`** indica a associação da interface `veth` com um Network Namespace.
 ```
 
 This is the host-side interface connected to the Pod namespace.
 
 ---
+# Address Translation
+
+| Layer | Address |
+|--------|---------|
+| Node Network | 192.168.49.4 |
+| Pod CIDR | 10.244.2.0/24 |
+| Pod IP | 10.244.2.3 |
+| Interface inside Pod | eth0@if5 |
+| Interface on Host | veth5b461568@if2 |
+
+
