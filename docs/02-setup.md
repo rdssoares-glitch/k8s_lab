@@ -161,6 +161,23 @@ minikube dashboard
 minikube ip
 ```
 
+## Obter o Status do cluster
+
+```bash
+minikube status
+```
+
+## Obter as imagens do cluster
+
+```bash
+minikube image ls
+```
+ 
+```bash
+minikube ssh
+crictl images
+```
+
 ## Acessar um nó via SSH
 
 Nó principal:
