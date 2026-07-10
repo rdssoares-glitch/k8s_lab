@@ -148,6 +148,19 @@ Session Affinity:         None
 External Traffic Policy:  Cluster
 Internal Traffic Policy:  Cluster
 Events:                   <none>
+
+kubectl get pods -n kube-system -o wide | grep coredns
+coredns-66bc5c9577-57sct           1/1     Running   17 (5h14m ago)   3d3h   10.244.0.2     minikube       <none>           <none>
+
+kubectl get endpoints -n kube-system kube-dns
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME       ENDPOINTS                                     AGE
+kube-dns   10.244.0.2:53,10.244.0.2:53,10.244.0.2:9153   3d3h
+
+kubectl get endpointslices -n kube-system
+NAME                   ADDRESSTYPE   PORTS        ENDPOINTS    AGE
+kube-dns-454nq         IPv4          9153,53,53   10.244.0.2   3d3h
+
 ```
 
 The backend Pods can change, but the Service IP remains stable.
@@ -297,22 +310,7 @@ eth0 Out:
 
 This means:
 
-Pod
- |
- |
- v
-
-kube-dns Service
-
-10.96.0.10
-
- |
- |
- v
-
-CoreDNS Pod
-
-10.244.0.2
+Pod---> kube-dns Service (10.96.0.10)--> CoreDNS Pod (10.244.0.2)
 
 The Service forwards the DNS request to one of the CoreDNS Pods.
 
