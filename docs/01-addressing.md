@@ -296,10 +296,29 @@ IP: 10.244.2.3
 ```
 O campo **`link-netnsid 2`** indica a associação da interface `veth` com um Network Namespace.
 ```
-
 This is the host-side interface connected to the Pod namespace.
+```
+Since Kindnet uses the **PTP** CNI plugin, the output of `ip r` on the node also shows the mapping between the Pod IP and the corresponding host-side `veth` interface.
 
----
+Command:
+
+```bash
+docker@minikube-m03:~$ ip r
+```
+
+Output:
+
+```text
+default via 192.168.49.1 dev eth0
+10.244.0.0/24 via 192.168.49.2 dev eth0
+10.244.1.0/24 via 192.168.49.3 dev eth0
+10.244.2.2 dev veth3ec6f990 scope host
+10.244.2.3 dev veth5b461568 scope host  # Pod 10.244.2.3
+10.244.2.4 dev vethc4a879bc scope host
+10.244.2.5 dev veth9f6d0892 scope host
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown
+192.168.49.0/24 dev eth0 proto kernel scope link src 192.168.49.4
+```
 # Address Translation
 
 | Layer | Address |
