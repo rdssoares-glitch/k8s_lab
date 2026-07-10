@@ -283,7 +283,7 @@ Observe the interface index (**ifindex**) on the host:
 5: veth5b461568@if2
 ^
 |
-ifindex 5
+ifindex 5 (eth0@if5) from nsenter output
 ```
 
 The interface index is used to map the Pod network interface to the host-side `veth` interface.
