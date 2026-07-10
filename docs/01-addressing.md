@@ -91,6 +91,38 @@ docker network inspect minikube
 | minikube-m02 | 192.168.49.3 |
 | minikube-m03 | 192.168.49.4 |
 
+### CNI in use by Minikube cluster
+
+```bash
+minikube ssh
+sudo cat /etc/cni/net.d/10-kindnet.conflist
+```
+### Relevant Output
+
+```json
+{
+        "cniVersion": "0.3.1",
+        "name": "kindnet",
+        "plugins": [
+        {
+                "type": "ptp",
+                "ipMasq": false,
+                "ipam": {
+                        "type": "host-local",
+                        "dataDir": "/run/cni-ipam-state",
+                        "routes": [
+
+
+                                { "dst": "0.0.0.0/0" }
+                        ],
+                        "ranges": [
+
+
+                                [ { "subnet": "10.244.0.0/24" } ]
+                        ]
+                }
+                
+```
 # Network Investigation
 
 This section demonstrates how to identify the network namespace and the IP address of a Pod by starting from the Kubernetes API and progressively inspecting the container runtime.
