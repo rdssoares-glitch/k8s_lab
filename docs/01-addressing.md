@@ -318,6 +318,27 @@ default via 192.168.49.1 dev eth0
 10.244.2.5 dev veth9f6d0892 scope host
 172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown
 192.168.49.0/24 dev eth0 proto kernel scope link src 192.168.49.4
+
+From output below, is possible to check which POD CIDR was assigned to each Node:
+
+rsoar001@C-PF46ZS03:~$ kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.podCIDR}{"\n"}{end}'
+minikube        10.244.0.0/24
+minikube-m02    10.244.1.0/24
+minikube-m03    10.244.2.0/24
+
+Thus, ip r from minikube-m03 (192.168.49.4) showns what are the route to local PODs and remote PODS.
+
+local Pods
+──────────────────────────────────────────
+10.244.2.2 → veth3ec6f990
+10.244.2.3 → veth5b461568
+10.244.2.4 → vethc4a879bc
+10.244.2.5 → veth9f6d0892
+
+Remote Pods 
+──────────────────────────────────────────
+10.244.1.0/24 → Node 192.168.49.3 (minikube-m02)
+10.244.0.0/24 → Node 192.168.49.2 (minikube)
 ```
 # Address Translation
 
