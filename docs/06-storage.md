@@ -1,31 +1,31 @@
-# Laboratório de Armazenamento no Kubernetes (Minikube)
+# Kubernetes Storage Lab (Minikube)
 
-## Verificando as StorageClasses existentes
+## Checking Existing StorageClasses
 
 ```bash
 kubectl get storageclass
 ```
 
-Saída:
+output:
 
 ```text
 NAME                 PROVISIONER                RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
 standard (default)   k8s.io/minikube-hostpath   Delete          Immediate           false                  5d18h
 ```
 
-O provisionador padrão do Minikube é:
+The default Minikube provisioner is:
 
 ```text
 k8s.io/minikube-hostpath
 ```
 
-Isso significa que o Minikube possui um **provisionador dinâmico**, permitindo praticar tanto **Provisionamento Dinâmico** quanto **Provisionamento Estático**.
+This means that Minikube includes a dynamic provisioner, allowing you to practice both Dynamic Provisioning and Static Provisioning.
 
 ---
 
-# Exercício 1 – Criar um PVC (Provisionamento Dinâmico)
+# Exercise 1 – Create a PVC (Dynamic Provisioning)
 
-## Manifesto do PVC
+## PVC manifest
 
 ```yaml
 apiVersion: v1
@@ -40,20 +40,20 @@ spec:
       storage: 1Gi
 ```
 
-Aplicação:
+Apply it:
 
 ```bash
 kubectl apply -f nginx-pvc.yaml
 ```
 
-Verificando:
+Verify:
 
 ```bash
 kubectl get pvc
 kubectl get pv
 ```
 
-Resultado:
+output:
 
 ```text
 PVC
@@ -73,15 +73,15 @@ Observe que **o PV foi criado automaticamente** pela StorageClass.
 
 ---
 
-# Exercício 2 – Descobrir onde o volume está
+# Exercise 2 – Find Where the Volume Is Stored
 
-Verifique o PV:
+Inspect the PV:
 
 ```bash
 kubectl describe pv pvc-484834ff-7b1b-48ac-8511-6235935f80b8
 ```
 
-Procure por:
+Look for:
 
 ```text
 Source:
@@ -89,25 +89,25 @@ Source:
   Path: /tmp/hostpath-provisioner/default/nginx-pvc
 ```
 
-Entre no Minikube:
+Access the Minikube node:
 
 ```bash
 minikube ssh
 ```
 
-Verifique o diretório:
+Check the directory:
 
 ```bash
 ls -latr /tmp/hostpath-provisioner/default/
 ```
 
-Resultado:
+Output:
 
 ```text
 nginx-pvc
 ```
 
-### Fluxo do Provisionamento Dinâmico
+### Dynamic Provisioning Flow
 
 ```text
 PVC
@@ -124,7 +124,7 @@ HostPath
 
 ---
 
-# Exercício 3 – Montar o PVC em um Pod
+# Exercise 3 – Mount the PVC into a Pod
 
 ```yaml
 apiVersion: v1
@@ -145,19 +145,19 @@ spec:
       claimName: nginx-pvc
 ```
 
-Aplicação:
+Apply it:
 
 ```bash
 kubectl apply -f pod_nginx_storage.yaml
 ```
 
-Entre no Pod:
+Get into the Pod:
 
 ```bash
 kubectl exec -it nginx-storage -- bash
 ```
 
-Crie um arquivo:
+Create a file:
 
 ```bash
 echo "Rodrigo Kubernetes Lab" > /usr/share/nginx/html/index.html
@@ -165,70 +165,70 @@ echo "Rodrigo Kubernetes Lab" > /usr/share/nginx/html/index.html
 
 ---
 
-# Exercício 4 – Persistência dos dados
+# Exercise 4 – Data Persistence
 
-Remova o Pod:
+Delete the Pod:
 
 ```bash
 kubectl delete pod nginx-storage
 ```
 
-Crie novamente:
+Create it again:
 
 ```bash
 kubectl apply -f pod_nginx_storage.yaml
 ```
 
-Verifique:
+Verify:
 
 ```bash
 kubectl exec -it nginx-storage -- cat /usr/share/nginx/html/index.html
 ```
 
-Resultado:
+output:
 
 ```text
 Rodrigo Kubernetes Lab
 ```
 
-O arquivo permaneceu porque está armazenado no **PersistentVolume**, não no sistema de arquivos efêmero do container.
+The file remains because it is stored on the **PersistentVolume**, not in the container's ephemeral filesystem.
 
 ---
 
-# Exercício 5 – Verificar o diretório físico
+# Exercise 5 – Inspect the Physical Directory
 
-Descubra em qual nó o Pod foi executado:
+Find out which node the Pod is running on:
 
 ```bash
 kubectl get pod nginx-storage -o wide
 ```
 
-Resultado:
+output:
 
 ```text
 NODE
 minikube-m02
 ```
 
-Entre no nó correto:
+Connect to the correct node:
 
 ```bash
 minikube ssh -n minikube-m02
 ```
 
-Verifique:
+Verify:
 
 ```bash
 ls -lah /tmp/hostpath-provisioner/default/nginx-pvc
 ```
 
-Resultado:
+output:
 
 ```text
 index.html
 ```
 
-Conteúdo:
+Display its contents::
 
 ```bash
 cat /tmp/hostpath-provisioner/default/nginx-pvc/index.html
@@ -238,24 +238,26 @@ cat /tmp/hostpath-provisioner/default/nginx-pvc/index.html
 Rodrigo Kubernetes Lab
 ```
 
-## O que isso demonstra?
+## What Does This Demonstrate?
 
-O **hostPath** é um armazenamento **local ao nó**.
+**hostPath** provides storage that is local to the node.
 
 ```text
 hostPath
      │
      ▼
-Disco local do Node
+local disk Node
 ```
 
-Se o Pod for executado em outro nó, o volume também estará nesse outro nó.
+If the Pod is scheduled on another node, the volume will also be located on that node.
 
-Esse comportamento é diferente de soluções distribuídas como **Ceph RBD**, onde o armazenamento é compartilhado entre todos os workers do cluster.
+This behavior differs from distributed storage solutions such as **Ceph RBD**, where storage is shared across all worker nodes in the cluster.
 
 ---
 
-# Exercício 6 – Criar um PV manualmente
+---
+
+# Exercise 6 – Create a PersistentVolume Manually
 
 ```yaml
 apiVersion: v1
@@ -273,7 +275,7 @@ spec:
     path: /mydisk
 ```
 
-Aplicação:
+Apply it:
 
 ```bash
 kubectl apply -f pv-lab.yaml
@@ -281,7 +283,7 @@ kubectl apply -f pv-lab.yaml
 
 ---
 
-# Exercício 7 – Criar um PVC utilizando o PV manual
+# Exercise 7 – Create a PVC Using the Manual PV
 
 ```yaml
 apiVersion: v1
@@ -301,20 +303,20 @@ spec:
       storage: 1Gi
 ```
 
-Aplicação:
+Apply it:
 
 ```bash
 kubectl apply -f pvc-lab.yaml
 ```
 
-Verificando:
+Verify:
 
 ```bash
 kubectl get pv
 kubectl get pvc
 ```
 
-Resultado:
+Output:
 
 ```text
 PV
@@ -330,16 +332,16 @@ NAME      STATUS   VOLUME
 pvc-lab   Bound    pv-lab
 ```
 
-## Como ocorreu o Binding?
+## How Did the Binding Occur?
 
-O Kubernetes comparou:
+Kubernetes compared:
 
 - StorageClass
-- Capacidade
+- Capacity
 - AccessModes
 - VolumeName
 
-Como todos eram compatíveis, realizou o **Binding**.
+Since all attributes were compatible, Kubernetes performed the **binding**.
 
 ```text
 PVC
@@ -349,21 +351,21 @@ PVC
 PV
 ```
 
-O uso de:
+Using:
 
 ```yaml
 storageClassName: ""
 ```
 
-significa:
+means:
 
-> Não utilize nenhuma StorageClass; procure um PV que também não possua StorageClass.
+> Do not use any StorageClass. Instead, look for a PersistentVolume that also does not have a StorageClass assigned.
 
 ---
 
-# Exercício 8 – Simular erro de capacidade
+# Exercise 8 – Simulate an Insufficient Capacity Error
 
-PVC solicitando **5 GiB**:
+PVC requesting **5 GiB**:
 
 ```yaml
 resources:
@@ -371,13 +373,13 @@ resources:
     storage: 5Gi
 ```
 
-PV disponível:
+Available PV:
 
 ```text
 2Gi
 ```
 
-Resultado:
+Result:
 
 ```bash
 kubectl describe pvc pvc-lab-5gi
@@ -387,7 +389,7 @@ kubectl describe pvc pvc-lab-5gi
 Cannot bind to requested volume "pv-lab": requested PV is too small
 ```
 
-O PVC permanece:
+The PVC remains in:
 
 ```text
 STATUS: Pending
@@ -395,7 +397,7 @@ STATUS: Pending
 
 ---
 
-# Exercício 9 – Simular incompatibilidade de AccessMode
+# Exercise 9 – Simulate an AccessMode Mismatch
 
 PV:
 
@@ -411,13 +413,13 @@ accessModes:
   - ReadWriteOnce
 ```
 
-Resultado:
+Result:
 
 ```text
 Cannot bind to requested volume "pv-lab": incompatible accessMode
 ```
 
-O PVC permanece:
+The PVC remains in:
 
 ```text
 STATUS: Pending
@@ -425,47 +427,47 @@ STATUS: Pending
 
 ---
 
-# Exercício 10 – Reclaim Policy
+# Exercise 10 – Reclaim Policy
 
-Verifique a política do PV:
+Check the PV policy:
 
 ```bash
 kubectl describe pv pv-lab
 ```
 
-Resultado:
+Output:
 
 ```text
 Reclaim Policy: Retain
 ```
 
-## Grave um arquivo
+## Write a File
 
-Monte o PVC em um Pod e execute:
+Mount the PVC into a Pod and run:
 
 ```bash
 echo "Reclaim policy test" > /usr/share/nginx/html/test.txt
 ```
 
-Descubra o nó:
+Find the node:
 
 ```bash
 kubectl get pod nginx-storage -o wide
 ```
 
-Entre no nó:
+Connect to the node:
 
 ```bash
 minikube ssh -n minikube-m02
 ```
 
-Verifique:
+Verify:
 
 ```bash
 cat /mydisk/test.txt
 ```
 
-Resultado:
+Output:
 
 ```text
 Reclaim policy test
@@ -473,45 +475,45 @@ Reclaim policy test
 
 ---
 
-## Delete o Pod e o PVC
+## Delete the Pod and the PVC
 
 ```bash
 kubectl delete pod nginx-storage
 kubectl delete pvc pvc-lab
 ```
 
-Verifique o PV:
+Check the PV:
 
 ```bash
 kubectl get pv pv-lab
 ```
 
-Resultado:
+Output:
 
 ```text
 NAME      STATUS
 pv-lab    Released
 ```
 
-Observe que:
+Notice that:
 
-- o PVC foi removido;
-- o PV permanece;
-- os dados continuam armazenados.
+- the PVC has been deleted;
+- the PV still exists;
+- the data remains stored.
 
-Verifique novamente:
+Verify again:
 
 ```bash
 cat /mydisk/test.txt
 ```
 
-Resultado:
+Output:
 
 ```text
 Reclaim policy test
 ```
 
-## Fluxo do Reclaim Policy = Retain
+## Reclaim Policy = Retain Flow
 
 ```text
 PV
@@ -526,7 +528,11 @@ Delete PVC
 PV → Released
  │
  ▼
-Dados permanecem no disco
+Data remains on disk
 ```
 
-O objetivo da política **Retain** é preservar os dados mesmo após a remoção do PVC, permitindo que o administrador decida quando e como reutilizar ou remover esse volume.
+The purpose of the **Retain** reclaim policy is to preserve the data even after the PVC has been deleted, allowing the cluster administrator to decide when and how the PersistentVolume should be reused or removed.
+
+---
+
+# Exercise 11 – Expand a PVC
