@@ -14,27 +14,23 @@ standard (default)   k8s.io/minikube-hostpath   Delete          Immediate       
 ```
 
 ```bash
-kubectl get storageclass standard -o yaml
+kubectl describe storageclass standard
 ```
 output:
 
 ```text
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"storage.k8s.io/v1","kind":"StorageClass","metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"},"labels":{"addonmanager.kubernetes.io/mode":"EnsureExists"},"name":"standard"},"provisioner":"k8s.io/minikube-hostpath"}
-    storageclass.kubernetes.io/is-default-class: "true"
-  creationTimestamp: "2026-07-07T18:40:58Z"
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
-  name: standard
-  resourceVersion: "279"
-  uid: 4173e2db-d95e-4cf5-b7aa-d11064853408
-provisioner: k8s.io/minikube-hostpath
-reclaimPolicy: Delete
-volumeBindingMode: Immediate
+kubectl describe storageclass standard
+Name:            standard
+IsDefaultClass:  Yes
+Annotations:     kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"storage.k8s.io/v1","kind":"StorageClass","metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"},"labels":{"addonmanager.kubernetes.io/mode":"EnsureExists"},"name":"standard"},"provisioner":"k8s.io/minikube-hostpath"}
+,storageclass.kubernetes.io/is-default-class=true
+Provisioner:           k8s.io/minikube-hostpath
+Parameters:            <none>
+AllowVolumeExpansion:  <unset>
+MountOptions:          <none>
+ReclaimPolicy:         Delete
+VolumeBindingMode:     Immediate
+Events:                <none>
 
 ```
 # Kubernetes `standard` StorageClass Summary
@@ -580,4 +576,19 @@ The purpose of the **Retain** reclaim policy is to preserve the data even after 
 
 ---
 
-# Exercise 11 – Expand a PVC
+# PVC Functionality: Deployment vs. StatefulSet
+
+| Feature | Deployment + PVC | StatefulSet + `volumeClaimTemplates` |
+| :--- | :--- | :--- |
+| **PVC Allocation** | **Shared Single PVC:** All Pod replicas reference the exact same PVC defined in `spec.volumes`. | **Unique PVC per Replica:** Every Pod replica receives its own dedicated PVC dynamically generated via `volumeClaimTemplates` (e.g., `data-db-0`, `data-db-1`). |
+| **Access Mode Needed** | Requires **`ReadWriteMany` (RWX)** if `replicas > 1` (unless using node-local single Pod mounts). | Uses **`ReadWriteOnce` (RWO)** naturally, as each Pod replica attaches to its own isolated volume. |
+| **Pod Identity & Volume Binding** | **Stateless / Interchangeable:** If a Pod dies, any replacement Pod mounts the same shared PVC. | **Sticky / Ordinal Identity:** Pod `db-1` will always reattach to `data-db-1` upon restart or relocation across nodes. |
+| **Scaling Behavior** | **No new storage created:** Scaling up adds Pods that attempt to connect to the existing single PVC. | **Automated provisioning:** Scaling up (`replicas: 3` → `4`) automatically provisions a new PVC (`data-db-3`) and PV. |
+| **Storage Cleanup on Deletion** | Deleting the Deployment leaves the single PVC intact. | Deleting the StatefulSet leaves **all created PVCs intact** (`data-db-0`, `data-db-1`, etc.) to prevent accidental data loss. |
+
+---
+
+### Key Takeaways:
+
+1. **Deployment:** Ideal for **stateless applications** or single-instance workloads requiring a shared filesystem (like a shared asset directory via NFS/CephFS).
+2. **StatefulSet:** Designed for **stateful applications** (e.g., PostgreSQL, MySQL, Kafka, Elasticsearch) where each instance requires its own independent, persistent disk space and a predictable identity.
