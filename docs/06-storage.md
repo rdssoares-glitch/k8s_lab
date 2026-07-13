@@ -13,6 +13,51 @@ NAME                 PROVISIONER                RECLAIMPOLICY   VOLUMEBINDINGMOD
 standard (default)   k8s.io/minikube-hostpath   Delete          Immediate           false                  5d18h
 ```
 
+```bash
+kubectl get storageclass standard -o yaml
+```
+output:
+
+```text
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"storage.k8s.io/v1","kind":"StorageClass","metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"},"labels":{"addonmanager.kubernetes.io/mode":"EnsureExists"},"name":"standard"},"provisioner":"k8s.io/minikube-hostpath"}
+    storageclass.kubernetes.io/is-default-class: "true"
+  creationTimestamp: "2026-07-07T18:40:58Z"
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: standard
+  resourceVersion: "279"
+  uid: 4173e2db-d95e-4cf5-b7aa-d11064853408
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+
+```
+# Kubernetes `standard` StorageClass Summary
+
+A **StorageClass** in Kubernetes acts as a blueprint that defines how Persistent Volumes (PVs) are dynamically provisioned in a cluster.
+
+Below is a summary of the key components of the `standard` StorageClass:
+
+### 1. Default Class Setting (`metadata`)
+* **`storageclass.kubernetes.io/is-default-class: "true"`**: Marks this StorageClass as the default choice. Any PersistentVolumeClaim (PVC) created without specifying a `storageClassName` will automatically use `standard`.
+
+### 2. Provisioner (`k8s.io/minikube-hostpath`)
+* Specifies the underlying driver responsible for creating storage. In Minikube, `minikube-hostpath` provisions storage as directories directly on the local Minikube node disk (under `/tmp/hostpath-provisioner/...`).
+
+### 3. Reclaim Policy (`reclaimPolicy: Delete`)
+* Dictates what happens to the physical volume when its associated PVC is deleted. With `Delete`, removing the PVC automatically deletes both the PersistentVolume (PV) and the underlying data.
+
+### 4. Volume Binding Mode (`volumeBindingMode: Immediate`)
+* Controls when volume creation occurs. `Immediate` means the volume is provisioned and bound as soon as the PVC is created, without waiting for a Pod to request it.
+
+### 5. Volume Expansion (`allowVolumeExpansion`)
+* Missing by default, which means resizing or expanding PVCs bound to this StorageClass is disabled unless `allowVolumeExpansion: true` is explicitly added.
+
 The default Minikube provisioner is:
 
 ```text
