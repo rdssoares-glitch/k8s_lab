@@ -69,7 +69,7 @@ NAME                                       STATUS   CLAIM
 pvc-484834ff-7b1b-48ac-8511-6235935f80b8   Bound    default/nginx-pvc
 ```
 
-Observe que **o PV foi criado automaticamente** pela StorageClass.
+Notice that the **PV was created automatically** by the StorageClass..
 
 ---
 
