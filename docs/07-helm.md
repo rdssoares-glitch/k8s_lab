@@ -195,7 +195,7 @@ helm show values bitnami/nginx
 helm show all bitnami/nginx
 ```
 
-# Module 3 -- Downloading a Chart
+# Module 3 - Downloading a Chart
 
 ## 3.1 Download
 
