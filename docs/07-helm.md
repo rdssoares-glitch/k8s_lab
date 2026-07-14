@@ -22,12 +22,10 @@ Entender de onde vêm os Charts.
 ```bash
 helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
-
-```bash
-rsoar001@C-PF46ZS03:~/k8s_lab$ helm repo add bitnami https://charts.bitnami.com/bitnami
-```
 output:
+
 ```text
+rsoar001@C-PF46ZS03:~/k8s_lab$ helm repo add bitnami https://charts.bitnami.com/bitnami
 "bitnami" has been added to your repositories
 ```
 ## 2 helm repo update
