@@ -1,6 +1,6 @@
 # Helm Lab with Bitnami Repository
 
-Verificando a versão do helm
+checking helm version
 
 ```bash
 rsoar001@C-PF46ZS03:~/k8s_lab$ helm version
@@ -13,11 +13,11 @@ version.BuildInfo{Version:"v3.16.1", GitCommit:"5a5449dc42be07001fd5771d56429132
 
 # Module 1 – Working with Helm Repositories
 
-Objetivo
+Objective
 
-Entender de onde vêm os Charts.
+Understand where Charts come from.
 
-## 1 Adicionar repositório bitnami
+## 1 Add bitnami repository
 
 ```bash
 helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -29,7 +29,7 @@ rsoar001@C-PF46ZS03:~/k8s_lab$ helm repo add bitnami https://charts.bitnami.com/
 "bitnami" has been added to your repositories
 ```
 ## 2 helm repo update
-O comando helm repo update acessa todos os repositórios cadastrados e baixa a versão mais recente do index.yaml.
+The helm repo update command accesses all registered repositories and downloads the latest version of index.yaml.
 
 ```bash
 helm repo update
@@ -43,7 +43,7 @@ Update Complete. ⎈Happy Helming!⎈
 ```
 
 
-## 3 Para listar os repositórios existentes:
+## 3 To list existing repositories:
 
 ```bash
 rsoar001@C-PF46ZS03:~/k8s_lab$ helm repo list
@@ -53,7 +53,7 @@ bitnami                 https://charts.bitnami.com/bitnami
 ```
 
 
-## 4 para remover um repo
+## 4 To remove a repo:
 
 ```bash
 helm repo remove prometheus-community
@@ -69,7 +69,7 @@ NAME    URL
 bitnami https://charts.bitnami.com/bitnami
 ```
 
-## 5 Pesquisar aplicações:
+## 5 Search application:
 
 ```bash
 helm search repo bitnami
@@ -98,7 +98,7 @@ bitnami/common                                  2.41.0          2.41.0
 bitnami/concourse                               5.1.45          7.13.2       
 ```
 
-## 6 Pesquisar apenas nginx:
+## 6 Search for nginx:
 ```bash
 helm search repo nginx
 ```
@@ -112,7 +112,7 @@ bitnami/nginx-ingress-controller        12.0.7          1.13.1
 bitnami/nginx-intel                     2.1.15          0.4.9          
 ```
 
-## 7 Pesquisar todas as versões
+## 7 search for available versions:
 ```bash
 helm search repo bitnami/nginx --versions
 ```
@@ -129,7 +129,7 @@ bitnami/nginx                           25.0.8          1.31.2
 ```
 # Module 2 – Exploring a Helm Chart
 
-2.1 Mostrar informações
+2.1 Show charts information:
 ```bash
 helm show chart bitnami/nginx
 ```
@@ -178,18 +178,18 @@ sources:
 - https://github.com/bitnami/charts/tree/main/bitnami/nginx
 version: 25.0.13
 ```
-## 2.2 Mostrar README
+## 2.2 Show README
 ```bash
 helm show readme bitnami/nginx
 ```
 
-## 2.3 mostrar os valores
+## 2.3 Show values
 
 ``` bash
 helm show values bitnami/nginx
 ```
 
-## 2.4 Mostrar tudo
+## 2.4 show all details
 
 ``` bash
 helm show all bitnami/nginx
@@ -197,7 +197,7 @@ helm show all bitnami/nginx
 
 # Module 3 -- Downloading a Chart
 
-## 3.1 Baixar
+## 3.1 Download
 
 ``` bash
 helm pull bitnami/nginx
@@ -212,7 +212,7 @@ drwxr-xr-x 10 rsoar001 rsoar001  4096 Jul 14 12:28 ..
 -rw-r--r--  1 rsoar001 rsoar001 62051 Jul 14 12:28 nginx-25.0.13.tgz
 ``` 
 
-## 3.2 Baixar e descompactar
+## 3.2 Download and unpack
 
 ```bash
 helm pull bitnami/nginx --untar
@@ -229,7 +229,7 @@ drwxr-xr-x  3 rsoar001 rsoar001  4096 Jul 14 12:31 .
 drwxr-xr-x  4 rsoar001 rsoar001  4096 Jul 14 12:31 nginx
 ```
 
-## 3.3 Explorar
+## 3.3 Explore directory structure
 
 ```text
 rsoar001@C-PF46ZS03:~/k8s_lab/05-helm$ cd nginx/
@@ -250,13 +250,13 @@ rsoar001@C-PF46ZS03:~/k8s_lab/05-helm/nginx$
 # Module 4 – Templates
 
 
-## 4.1 Gerar os YAMLs Antes de instalar.
+## 4.1 Generate YAMLs before install.
 
 ```bash
 helm template nginx .  ou helm template nginx bitnami/nginx
 ```
 
-Agora compare com:
+Now compare with:
 
 ``` bash
 kubectl get deployment -o yaml
@@ -270,12 +270,11 @@ kind: List
 metadata:
   resourceVersion: ""
 ```
-Você perceberá que o Helm apenas gera YAML.
-
+You will notice that Helm only generates YAML files locally and doesn't apply them yet.
 
 # Module 5 – First Installation
 
-## 5.1 Primeira instalação
+## 5.1 Nginx installation
 
 ```bash
 helm install nginx bitnami/nginx
@@ -295,7 +294,7 @@ CHART VERSION: 25.0.13
 APP VERSION: 1.31.2
 ```
 
-## 5.2 Ver releases
+## 5.2 Show releases
 
 ```bash
 helm list
@@ -307,7 +306,7 @@ rsoar001@C-PF46ZS03:~/k8s_lab/05-helm/nginx$ helm list
 NAME    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
 nginx   default         1               2026-07-14 12:36:12.539157865 -0300 -03 deployed        nginx-25.0.13   1.31.2
 ```
-## 5.3 Ver recursos
+## 5.3 Show resources
 ```bash
 kubectl get all
 ```
@@ -327,24 +326,24 @@ replicaset.apps/nginx-86f6cf6c5   1         1         1       4m28s
 # Module 6 – Exploring the Installation
 
 
-## 6.1 Ver valores utilizados
+## 6.1 View user-supplied values
 ```bash
 helm get values nginx
 ```
 
-## 6.2 Ver manifests
+## 6.2 view maifests
 
 ``` bash
 helm get manifest nginx
 ```
 
-## 6.3 ver notas
+## 6.3 view notes
 
 ``` bash
 helm get notes nginx
 ```
 
-## 6.4 ver status
+## 6.4 view status
 
 ``` bash
 helm status nginx
@@ -367,9 +366,9 @@ APP VERSION: 1.31.2
 
 # Module 7 – Simple Customization
 
-Alterar o número de replica de 1 para 3 e service de LoadBalancer para NodePort:
+Change the number of replicas from 1 to 3 and service type from LoadBalancer to NodePort:
 
-## 7.1 Aplicar as atualizações
+## 7.1 Apply changes
  ```bash 
 helm upgrade nginx bitnami/nginx -f values.yaml
 ```
@@ -410,7 +409,7 @@ nginx        NodePort    10.108.45.84   <none>        80:32696/TCP,443:32305/TCP
 
 # Module 8 – Overrides
 
-Sem criar arquivo.
+overrides without files.
 ```bash
 helm upgrade nginx bitnami/nginx --set replicaCount=4
 ```
@@ -434,7 +433,8 @@ rsoar001@C-PF46ZS03:~/k8s_lab/05-helm/nginx$ helm list
 NAME    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
 nginx   default         3               2026-07-14 12:50:26.625538786 -0300 -03 deployed        nginx-25.0.13   1.31.2
 ```
-Verificando o número de réplicas após o helm upgrade:
+Checking the number of replicas after the Helm upgrade:
+
 ```bash
 kubectl get po
 ```
@@ -449,7 +449,7 @@ nginx-86f6cf6c5-wlf8f   1/1     Running   0          14m
 nginx-86f6cf6c5-zkttr   1/1     Running   0          2m23s
 ```
 
-Depois:
+After:
 
 ```text
 rsoar001@C-PF46ZS03:~/k8s_lab/05-helm/nginx$ helm get values nginx
@@ -458,7 +458,7 @@ replicaCount: 4
 ```
 # Module 9 – Release History
 
-Verificando histórico helm
+Checking Helm release history:
 ```bash
 helm history nginx
 ```
@@ -471,7 +471,8 @@ REVISION        UPDATED                         STATUS          CHART           
 3               Tue Jul 14 12:50:26 2026        deployed        nginx-25.0.13   1.31.2          Upgrade complete
 ```
 # Module 10 – Rollback
-Para fazer rollback para versão helm anterior:
+
+To perform a rollback to a previous Helm release revision:
 
 ```bash
 helm rollback nginx 2
@@ -490,7 +491,7 @@ REVISION        UPDATED                         STATUS          CHART           
 3               Tue Jul 14 12:50:26 2026        superseded      nginx-25.0.13   1.31.2          Upgrade complete
 4               Tue Jul 14 12:53:03 2026        deployed        nginx-25.0.13   1.31.2          Rollback to 2
 ```
-Verificando a quantidade de replicas atualizada:
+Checking the updated replica count:
 
 ```text
 rsoar001@C-PF46ZS03:~/k8s_lab/05-helm/nginx$ kubectl get po
