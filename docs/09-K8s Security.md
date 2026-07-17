@@ -612,3 +612,630 @@ Use a **ClusterRole** when permissions should:
 - **ClusterRole** = Cluster-level permissions
 
 A **ClusterRole** can also be bound to a single namespace using a **RoleBinding**, making it reusable without granting cluster-wide access.
+
+
+# Lab 02 - Creating a Role
+
+## Objective
+
+In this lab, we will create a **ServiceAccount** and a **Role**, then demonstrate that **creating a Role alone does not grant permissions**.
+
+A Role only defines **what actions are allowed**. Until it is associated with a user or ServiceAccount through a **RoleBinding**, the permissions are never applied.
+
+---
+
+# Step 1 - Create a ServiceAccount
+
+Create a ServiceAccount named `developer`.
+
+```bash
+kubectl create serviceaccount developer
+```
+
+Expected output:
+
+```text
+serviceaccount/developer created
+```
+
+Verify that it exists.
+
+```bash
+kubectl get serviceaccounts
+```
+
+Example:
+
+```text
+NAME        SECRETS   AGE
+default     0         10d
+developer   0         5s
+```
+
+Describe the ServiceAccount.
+
+```bash
+kubectl describe serviceaccount developer
+```
+
+Example:
+
+```text
+Name:                developer
+Namespace:           default
+Labels:              <none>
+Annotations:         <none>
+Image pull secrets:  <none>
+Events:              <none>
+```
+
+At this point, the ServiceAccount exists but has **no permissions**.
+
+Verify this using:
+
+```bash
+kubectl auth can-i list pods \
+--as system:serviceaccount:default:developer
+```
+
+Expected output:
+
+```text
+no
+```
+
+---
+
+# Step 2 - Verify Existing Roles
+
+Before creating a Role, verify that no Roles exist in the current namespace.
+
+```bash
+kubectl get roles
+```
+
+Expected output:
+
+```text
+No resources found in default namespace.
+```
+
+---
+
+# Step 3 - Create a Role
+
+Create the following file.
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader
+  namespace: default
+
+rules:
+- apiGroups: [""]
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+```
+
+Apply the Role.
+
+```bash
+kubectl apply -f role-pod-reader.yaml
+```
+
+Expected output:
+
+```text
+role.rbac.authorization.k8s.io/pod-reader created
+```
+
+---
+
+# Step 4 - Verify the Role
+
+```bash
+kubectl get roles
+```
+
+Example:
+
+```text
+NAME         CREATED AT
+pod-reader   2026-07-17T20:03:51Z
+```
+
+Describe the Role.
+
+```bash
+kubectl describe role pod-reader
+```
+
+Example:
+
+```text
+PolicyRule:
+  Resources  Verbs
+  ---------  -----
+  pods       [get list]
+```
+
+The Role now defines the following permissions:
+
+- get Pods
+- list Pods
+
+within the `default` namespace.
+
+---
+
+# Step 5 - Test the ServiceAccount Again
+
+Test the ServiceAccount one more time.
+
+```bash
+kubectl auth can-i list pods \
+--as system:serviceaccount:default:developer
+```
+
+Expected output:
+
+```text
+no
+```
+
+Although the Role exists, the ServiceAccount still cannot list Pods.
+
+---
+
+# Why?
+
+The authorization process is:
+
+```text
+ServiceAccount
+        │
+        ▼
+Authentication
+        │
+        ▼
+Authenticated
+        │
+        ▼
+Role exists?
+        │
+       YES
+        │
+        ▼
+RoleBinding exists?
+        │
+       NO
+        │
+        ▼
+Authorization
+        │
+        ▼
+Forbidden
+```
+
+The `pod-reader` Role defines permissions, but they are not assigned to any identity.
+
+Without a **RoleBinding**, Kubernetes has no way to associate the `developer` ServiceAccount with the `pod-reader` Role.
+
+---
+
+# Key Takeaways
+
+This lab demonstrated that:
+
+- A **ServiceAccount** provides an identity.
+- A **Role** defines a set of permissions.
+- Creating a Role does **not** automatically grant permissions.
+- A **RoleBinding** is required to associate a Role with a user, group, or ServiceAccount.
+- Without a RoleBinding, every authorization request is denied.
+
+In the next lab, we will create a **RoleBinding** and observe how the ServiceAccount immediately gains the permissions defined by the Role.
+
+
+# Lab 03 - Creating a RoleBinding
+
+## Objective
+
+In this lab, we will create a **RoleBinding** to associate the `developer` ServiceAccount with the `pod-reader` Role.
+
+This demonstrates the final step of the Kubernetes RBAC authorization model.
+
+---
+
+# Current RBAC State
+
+At this point:
+
+- The `developer` ServiceAccount exists.
+- The `pod-reader` Role exists.
+- No RoleBinding has been created.
+
+The authorization flow is currently:
+
+```text
+ServiceAccount (developer)
+            │
+            ▼
+Authentication
+            │
+            ▼
+Authenticated
+            │
+            ▼
+RoleBinding
+            │
+            ▼
+Not Found
+            │
+            ▼
+Authorization
+            │
+            ▼
+Forbidden
+```
+
+Verify the current permissions.
+
+```bash
+kubectl auth can-i list pods \
+--as system:serviceaccount:default:developer
+```
+
+Expected output:
+
+```text
+no
+```
+
+---
+
+# Step 1 - Create a RoleBinding
+
+Create the following file.
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: developer-pod-reader
+  namespace: default
+
+subjects:
+- kind: ServiceAccount
+  name: developer
+  namespace: default
+
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: pod-reader
+```
+
+Apply the manifest.
+
+```bash
+kubectl apply -f rolebinding-pod-reader.yaml
+```
+
+Expected output:
+
+```text
+rolebinding.rbac.authorization.k8s.io/developer-pod-reader created
+```
+
+---
+
+# Step 2 - Verify the RoleBinding
+
+List the RoleBindings.
+
+```bash
+kubectl get rolebindings
+```
+
+Example:
+
+```text
+NAME                   ROLE                AGE
+developer-pod-reader   Role/pod-reader     5s
+```
+
+Describe the RoleBinding.
+
+```bash
+kubectl describe rolebinding developer-pod-reader
+```
+
+Example:
+
+```text
+Name:         developer-pod-reader
+Namespace:    default
+
+Role:
+  Kind:  Role
+  Name:  pod-reader
+
+Subjects:
+  Kind            Name
+  ----            ----
+  ServiceAccount  developer
+```
+
+Notice that the RoleBinding connects two objects:
+
+- ServiceAccount: `developer`
+- Role: `pod-reader`
+
+---
+
+# Step 3 - Test RBAC Again
+
+Run the same authorization test.
+
+```bash
+kubectl auth can-i list pods \
+--as system:serviceaccount:default:developer
+```
+
+Expected output:
+
+```text
+yes
+```
+
+The ServiceAccount can now list Pods.
+
+Test another permitted operation.
+
+```bash
+kubectl auth can-i get pods \
+--as system:serviceaccount:default:developer
+```
+
+Expected output:
+
+```text
+yes
+```
+
+Now test an operation that was **not** granted.
+
+```bash
+kubectl auth can-i delete pods \
+--as system:serviceaccount:default:developer
+```
+
+Expected output:
+
+```text
+no
+```
+
+Likewise:
+
+```bash
+kubectl auth can-i create deployments \
+--as system:serviceaccount:default:developer
+```
+
+Expected output:
+
+```text
+no
+```
+
+---
+
+# Why?
+
+The authorization flow has now changed.
+
+```text
+ServiceAccount
+(developer)
+        │
+        ▼
+Authentication
+        │
+        ▼
+Authenticated
+        │
+        ▼
+RoleBinding Found
+        │
+        ▼
+Role
+(pod-reader)
+        │
+        ▼
+Rules
+
+Pods
+get
+list
+        │
+        ▼
+Authorization
+        │
+        ├── list pods   → ALLOWED
+        ├── get pods    → ALLOWED
+        ├── delete pods → DENIED
+        └── create deployments → DENIED
+```
+
+---
+
+# Visualizing the Relationship
+
+The complete RBAC relationship is now:
+
+```text
+                  developer
+              ServiceAccount
+                     │
+                     ▼
+          developer-pod-reader
+             RoleBinding
+                     │
+                     ▼
+               pod-reader
+                  Role
+                     │
+                     ▼
+        get pods
+        list pods
+```
+
+The RoleBinding is the object that assigns the Role's permissions to the ServiceAccount.
+
+---
+
+# Key Takeaways
+
+This lab demonstrated that:
+
+- A Role defines permissions.
+- A ServiceAccount provides an identity.
+- A RoleBinding associates the identity with the permissions.
+- Permissions are granted immediately after the RoleBinding is created.
+- RBAC follows the principle of least privilege: only the explicitly granted operations are allowed.
+
+# Authorization Modes in Minikube
+
+The Kubernetes API Server supports multiple authorization modules.
+
+The enabled modules can be verified by inspecting the API Server manifest.
+
+```bash
+minikube ssh -n minikube
+
+sudo cat /etc/kubernetes/manifests/kube-apiserver.yaml
+```
+
+Relevant configuration:
+
+```text
+--authorization-mode=Node,RBAC
+```
+
+This means the API Server evaluates every request using two authorization modules:
+
+1. **Node Authorizer**
+2. **RBAC Authorizer**
+
+---
+
+# Authorization Flow
+
+```text
+             Authentication
+                    │
+                    ▼
+          User / Groups Identified
+                    │
+                    ▼
+          Authorization Pipeline
+                    │
+      ┌─────────────┴─────────────┐
+      ▼                           ▼
+Node Authorizer            RBAC Authorizer
+      │                           │
+      └─────────────┬─────────────┘
+                    ▼
+          Allow or Deny Request
+```
+
+Each authorization module is evaluated in the configured order.
+
+---
+
+# Node Authorizer
+
+The **Node Authorizer** is designed specifically for Kubernetes worker nodes.
+
+Its purpose is to ensure that a kubelet can only access resources related to the node it manages.
+
+For example, a kubelet is allowed to:
+
+- Read Pods scheduled on its node
+- Update its own Node object
+- Read Secrets and ConfigMaps required by its Pods
+
+The Node Authorizer does **not** evaluate requests from regular users or ServiceAccounts.
+
+---
+
+# RBAC Authorizer
+
+The **RBAC Authorizer** is responsible for authorizing:
+
+- Users
+- Groups
+- ServiceAccounts
+
+It evaluates Kubernetes RBAC objects such as:
+
+- Role
+- ClusterRole
+- RoleBinding
+- ClusterRoleBinding
+
+For example, when executing:
+
+```bash
+kubectl auth can-i list pods \
+--as system:serviceaccount:default:developer
+```
+
+the request is evaluated by the RBAC Authorizer.
+
+The authorizer searches for matching RoleBindings and ClusterRoleBindings to determine whether the requested operation is allowed.
+
+---
+
+# Why Both Modules?
+
+Different identities require different authorization mechanisms.
+
+| Identity | Authorization Module |
+|----------|----------------------|
+| kubelet | Node Authorizer |
+| User | RBAC |
+| Group | RBAC |
+| ServiceAccount | RBAC |
+
+This separation improves security by ensuring that kubelets receive only the permissions required to manage their own workloads, while users and applications are governed by RBAC policies.
+
+---
+
+# Key Takeaway
+
+The Minikube cluster is configured with:
+
+```text
+--authorization-mode=Node,RBAC
+```
+
+This means:
+
+- **Node Authorizer** protects communications between kubelets and the API Server.
+- **RBAC Authorizer** controls access for users, groups, and ServiceAccounts.
+- **User** = identity for people and external systems.
+- **ServiceAccount** = identity for applications running inside Kubernetes.
+- Humans usually authenticate through external identity providers.
+- Applications should use ServiceAccounts with the minimum RBAC permissions required.
+
+The Kubernetes security model follows the principle of:
+
+> **Least Privilege: grant only the permissions required for each identity.**
+> Throughout this RBAC lab, every authorization decision involving the `developer` ServiceAccount is handled by the **RBAC Authorizer**.
